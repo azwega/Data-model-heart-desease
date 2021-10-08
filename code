@@ -1,0 +1,228 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib import rcParams
+from matplotlib.cm import rainbow
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+
+
+# import dataset
+
+
+dataset = pd.read_csv('heart.csv')
+dataset.head()
+
+
+# lihat data
+
+
+kasus1 = dataset[dataset['target'] == 1]
+kasus1
+
+
+# lihat data
+
+
+kasus2 = dataset[dataset['target'] == 0]
+kasus2
+
+
+# confusion matrix
+
+
+rcParams['figure.figsize'] = 21,15
+plt.matshow(dataset.corr())
+plt.yticks(np.arange(dataset.shape[1]), dataset.columns)
+plt.xticks(np.arange(dataset.shape[1]), dataset.columns)
+plt.colorbar()
+
+
+# grafik data
+
+
+rcParams['figure.figsize'] = 8,6
+plt.bar(dataset['target'].unique(), dataset['target'].value_counts(), color = ['red', 'green'])
+plt.xticks([0, 1])
+plt.xlabel('Target')
+plt.ylabel('Jumlah')
+plt.title('jumlah setiap target')
+
+
+# preproscesing data
+
+
+dataset = pd.get_dummies(dataset, columns = ['sex', 'cp', 'fbs', 'restecg', 'exang', 'slope', 'ca', 'thal'])
+standardScaler = StandardScaler()
+kolom_pengukuran = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak']
+dataset[kolom_pengukuran] = standardScaler.fit_transform(dataset[kolom_pengukuran])
+
+
+
+
+
+y = dataset['target']
+X1 = dataset.drop(['target'], axis = 1)
+X = (X1 - np.min(X1))/(np.max(X1)-np.min(X1)).values
+X_traning, X_tes, y_traning, y_tes = train_test_split(X, y, test_size = 0.33, random_state = 0)
+
+
+# KNN
+
+
+knn_akurasi = []
+for k in range(1,21):
+    klasifikasi_knn = KNeighborsClassifier(n_neighbors = k)
+    klasifikasi_knn.fit(X_traning, y_traning)
+    knn_akurasi.append(klasifikasi_knn.score(X_tes, y_tes))
+
+
+# grafik KNN
+
+
+plt.plot([k for k in range(1, 21)], knn_akurasi, color = 'red')
+for i in range(1,21):
+    plt.text(i, knn_akurasi[i-1], (i, knn_akurasi[i-1]))
+plt.xticks([i for i in range(1, 21)])
+plt.xlabel('tetangga (K)')
+plt.ylabel('Nilai')
+plt.title('Visualisasi Knn')
+
+
+# SVM
+
+
+svm_akurasi = []
+Kernel = ['linear', 'poly', 'rbf', 'sigmoid']
+for i in range(len(Kernel)):
+    klasifikasi_svm = SVC(kernel = Kernel[i])
+    klasifikasi_svm.fit(X_traning, y_traning)
+    svm_akurasi.append(klasifikasi_svc.score(X_tes, y_tes))
+
+
+# grafik SVM
+
+
+colors = rainbow(np.linspace(0, 1, len(Kernel)))
+plt.bar(Kernel, svm_akurasi, color = colors)
+for i in range(len(Kernel)):
+    plt.text(i, svm_akurasi[i], svm_akurasi[i])
+plt.xlabel('Kernel')
+plt.ylabel('Nilai')
+plt.title('Visualisasi SVM')
+
+
+# decision tree
+
+
+dt_akurasi = []
+for i in range(1, len(X.columns) + 1):
+    klasifikasi_dt = DecisionTreeClassifier(max_features = i, random_state = 0)
+    klasifikasi_dt.fit(X_traning, y_traning)
+    dt_akurasi.append(klasifikasi_dt.score(X_tes, y_tes))
+
+
+# grafik decision tree
+
+
+plt.plot([i for i in range(1, len(X.columns) + 1)], dt_akurasi, color = 'green')
+for i in range(1, len(X.columns) + 1):
+    plt.text(i, dt_akurasi[i-1], (i, dt_akurasi[i-1]))
+plt.xticks([i for i in range(1, len(X.columns) + 1)])
+plt.xlabel('Fitur')
+plt.ylabel('Nilai')
+plt.title('Visualisasi Decision Tree')
+
+
+# random forest
+
+
+rf_akurasi = []
+trees = [10, 100, 200, 500, 1000]
+for i in trees:
+    klasifikasi_rf = RandomForestClassifier(n_estimators = i, random_state = 0)
+    klasifikasi_rf.fit(X_traning, y_traning)
+    rf_akurasi.append(klasifikasi_rf.score(X_tes, y_tes))
+
+
+# grafik random forest
+
+
+colors = rainbow(np.linspace(0, 1, len(trees)))
+plt.bar([i for i in range(len(trees))], rf_akurasi, color = colors, width = 0.8)
+for i in range(len(trees)):
+    plt.text(i, rf_akurasi[i], rf_akurasi[i])
+plt.xticks(ticks = [i for i in range(len(trees))], labels = [str(estimator) for estimator in trees])
+plt.xlabel('Nilai estimasi')
+plt.ylabel('Nilai')
+plt.title('Visualisasi Random Forest')
+
+
+# logistic regression
+
+
+logre_akurasi=[]
+iteration = [10, 50, 100, 1000, 3000]
+for i in iteration:
+    klasifikasi_logre = LogisticRegression(max_iter =i, random_state=0, solver='liblinear')
+    klasifikasi_logre.fit(X_traning, y_traning)
+    logre_akurasi.append(klasifikasi_logre.score(X_tes, y_tes))
+
+
+# grafik regression
+
+
+colors = rainbow(np.linspace(0, 1, len(iteration)))
+plt.bar([i for i in range(len(iteration))], logre_akurasi, color = colors, width = 0.8)
+for i in range(len(iteration)):
+    plt.text(i, logre_akurasi[i], logre_akurasi[i])
+plt.xticks(ticks = [i for i in range(len(iteration))], labels = [str(max_iter) for max_iter in iteration])
+plt.xlabel('Nilai iteration')
+plt.ylabel('Nilai')
+plt.title('Visualisasi Logistic Regression')
+
+
+# naive bayes
+
+
+nb_akurasi = []
+for i in range(1, len(X.columns) + 1):
+    klasifikasi_nb = GaussianNB()
+    klasifikasi_nb.fit(X_traning, y_traning)
+    nb_akurasi.append(klasifikasi_nb.score(X_tes, y_tes))
+
+
+# grafik naive bayes
+
+
+plt.plot([i for i in range(1, len(X.columns) + 1)], nb_akurasi, color = 'green')
+for i in range(1, len(X.columns) + 1):
+    plt.text(i, nb_akurasi[i-1], (i, nb_akurasi[i-1]))
+plt.xticks([i for i in range(1, len(X.columns) + 1)])
+plt.xlabel('Fitur')
+plt.ylabel('Nilai')
+plt.title('Visualisasi Naive Bayes')
+
+# kesimpulan
+
+# Dari hasil traning dan melibatkan analisis dataset pasien penyakit jantung dengan pemrosesan data yang tepat. Kemudian, 6 model dilatih dan diuji dengan skor maksimal sebagai berikut:
+# 1. KNN : 87
+# 2. SVM : 80
+# 3. Decision Tree: 80
+# 4. Random Forest: 84
+# 5. Logistic Regression : 83
+# 6. Naive Bayes : 80
+# 
+# Berdasarkan data tersebut dapat disimpulkan bahwa KNN memiliki nilai akurasi yang besar dengan nilai 84.
+
+
+
+
